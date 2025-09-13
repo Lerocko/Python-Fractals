@@ -10,43 +10,45 @@ def input_coords():
 
 
 def cartesian_coords(A, B):
+    # Divide the segment AB into 3 parts and calculate point P2 that forms the triangle
     V = B - A # vector from A to B
     d = np.linalg.norm(V) # distance from A to B
     theta = np.arctan2(V[1], V[0]) # angle in radians
     R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]) # rotation matrix
+    
     p1 = A + (1-phi) * (B - A) # first division point
     p3 = A + phi * (B - A) # second division point
-    p1p3 = np.linalg.norm(p3 - p1) # lenght of the base of the triangle
-    L1 = np.linalg.norm(B - p3) # length 1 of the sides of the triangle
-    L2 = np.linalg.norm(p1 - A) # length 2 of the sides of the triangle
-    p2_x = (L1**2 - L2**2 + p1p3**2) / (2*p1p3) # x coordinate of the point p2
-    p2_y = np.sqrt(L1**2 - p2_x**2) # y coordinate of the point p2
-    p2_prev = np.array([p2_x, p2_y]) # point p2 in local coordinates
-    p2_rotated = np.dot(R, p2_prev) # rotate point p2
-    p2 = p2_rotated + A # translate point p2 to global
-    if d > 10:
-         # flake #1
-        cartesian_coords(A, p1)
-        # flake #2
-        cartesian_coords(p1, p2)
-        # flake #3
-        cartesian_coords(p2, p3)
-        # flake #4
-        cartesian_coords(p3, B)
+    base_length = np.linalg.norm(p3 - p1) # lenght of the base of the triangle
+    L = np.linalg.norm(p1 - A) # length of the sides of the triangle
+    p2_local = np.array([(L**2 - L**2 + base_length**2) / (2*base_length),
+                         np.sqrt(L**2 - ((L**2 - L**2 + base_length**2) / (2*base_length))**2)])
+    p2_global = np.dot(R, p2_local) + A
+    return p1, p2_global, p3
+    
+def draw_koch_segment(A, B, min_length=10):
+# Recursively draw a Koch snowflake segment
+    d = np.linalg.norm(B - A)
+    if d > min_length:
+        p1, p2, p3 = cartesian_coords(A, B)
+        draw_koch_segment(A, p1, min_length)
+        draw_koch_segment(p1, p2, min_length)
+        draw_koch_segment(p2, p3, min_length)
+        draw_koch_segment(p3, B, min_length)
     else:
         # draw the smallest triangle of the fractal
+        p1, p2, p3 = cartesian_coords(A, B)
         x_coords = [A[0], p1[0], p2[0], p3[0], B[0]]
         y_coords = [A[1], p1[1], p2[1], p3[1], B[1]]
         plt.plot(x_coords, y_coords, color='blue')  # draw lines connecting the points
-        plt.axis('equal')  # keep the x and y axes at the same scale
-        plt.pause(0.05)  # pause to update the plot
+        
         
 
 def main():
     print('Drawing the Koch Snowflake...')
     A, B = input_coords()
     plt.ion()  # turn on interactive mode
-    cartesian_coords(A, B)
+    draw_koch_segment(A, B)
+    plt.axis('equal')  # equal scaling for x and y axes
     plt.ioff()  # turn off interactive mode
     plt.show()  # keep the plot open
 
