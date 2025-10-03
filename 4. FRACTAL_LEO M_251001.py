@@ -78,6 +78,8 @@ def drawKochSF(A, B, is_regular=True, choice_inverse=False):
         y_coords = [A[1], p1[1], p2[1], p3[1], B[1]]
         plt.plot(x_coords, y_coords, color='red')
         plt.axis('equal')
+        plt.draw
+        plt.pause(0.00001)
 
 def generate_vertices(num_vertices = 3, radius=250):
     """Generate vertices of a equilater regular polygon circunscrite."""
